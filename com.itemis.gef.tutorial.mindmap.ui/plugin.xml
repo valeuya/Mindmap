@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin
+>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+      		class="com.itemis.gef.tutorial.mindmap.ui.editor.SimpleMindMapEditor"
+            default="false"
+            extensions="smm"
+            id="com.itemis.gef.tutorial.mindmap.ui.simplemindmapeditor"
+            name="Simple Mindmap Editor"
+           contributorClass="com.itemis.gef.tutorial.mindmap.ui.editor.EditorActionBarContributor"
+            >
+      </editor>
+   </extension>
+</plugin>
