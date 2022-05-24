@@ -1,3 +1,25 @@
+/**
+ * GEF 5.0.0 Mindmap Tutorial
+ *
+ *  Copyright 2017 by itemis AG
+ *
+ * This file is part of some open source application.
+ *
+ * Some open source application is free software: you can redistribute
+ * it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * Some open source application is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
+ */
 package com.itemis.gef.tutorial.mindmap.parts;
 
 import java.beans.PropertyChangeEvent;
@@ -24,57 +46,49 @@ import javafx.scene.transform.Translate;
  * {@link MindMapNodeVisual} for a instance of the {@link MindMapNode}.
  *
  */
-public class MindMapNodePart extends AbstractContentPart<MindMapNodeVisual>
-		implements ITransformableContentPart<MindMapNodeVisual>, IResizableContentPart<MindMapNodeVisual>, PropertyChangeListener  {
+public class MindMapNodePart extends AbstractContentPart<MindMapNodeVisual> implements
+		ITransformableContentPart<MindMapNodeVisual>, IResizableContentPart<MindMapNodeVisual>, PropertyChangeListener {
 
 	@Override
-    protected void doActivate() {
-            super.doActivate();
-            getContent().addPropertyChangeListener(this);
-    }
+	protected void doActivate() {
+		super.doActivate();
+		getContent().addPropertyChangeListener(this);
+	}
 
-    @Override
-    protected void doDeactivate() {
-            getContent().removePropertyChangeListener(this);
-            super.doDeactivate();
-    }
-
-    @Override
-    public void propertyChange(PropertyChangeEvent event) {
-            String prop = event.getPropertyName();
-            if (MindMapNode.PROP_COLOR.equals(prop) || MindMapNode.PROP_DESCRIPTION.equals(prop)
-                            || MindMapNode.PROP_TITLE.equals(prop)) {
-                    refreshVisual();
-            }
-    }
 	@Override
 	protected MindMapNodeVisual doCreateVisual() {
 		return new MindMapNodeVisual();
 	}
 
 	@Override
+	protected void doDeactivate() {
+		getContent().removePropertyChangeListener(this);
+		super.doDeactivate();
+	}
+
+	@Override
 	protected SetMultimap<? extends Object, String> doGetContentAnchorages() {
-// Nothing to anchor to
+		// Nothing to anchor to
 		return HashMultimap.create();
 	}
 
 	@Override
 	protected List<? extends Object> doGetContentChildren() {
-// we don't have any children.
+		// we don't have any children.
 		return Collections.emptyList();
 	}
 
 	@Override
 	protected void doRefreshVisual(MindMapNodeVisual visual) {
-// updating the visual's texts
+		// updating the visual's texts
 		MindMapNode node = getContent();
 		visual.setTitle(node.getTitle());
 		visual.setDescription(node.getDescription());
 		visual.setColor(node.getColor());
 
-// use the IResizableContentPart API to resize the visual
+		// use the IResizableContentPart API to resize the visual
 		setVisualSize(getContentSize());
-// use the ITransformableContentPart API to position the visual
+		// use the ITransformableContentPart API to position the visual
 		setVisualTransform(getContentTransform());
 	}
 
@@ -95,14 +109,23 @@ public class MindMapNodePart extends AbstractContentPart<MindMapNodeVisual>
 	}
 
 	@Override
+	public void propertyChange(PropertyChangeEvent event) {
+		String prop = event.getPropertyName();
+		if (MindMapNode.PROP_COLOR.equals(prop) || MindMapNode.PROP_DESCRIPTION.equals(prop)
+				|| MindMapNode.PROP_TITLE.equals(prop) || MindMapNode.PROP_BOUNDS.equals(prop)) {
+			refreshVisual();
+		}
+	}
+
+	@Override
 	public void setContentSize(Dimension totalSize) {
-// storing the new size
+		// storing the new size
 		getContent().getBounds().setSize(totalSize);
 	}
 
 	@Override
 	public void setContentTransform(Affine totalTransform) {
-// storing the new position
+		// storing the new position
 		Rectangle bounds = getContent().getBounds().getCopy();
 		bounds.setX(totalTransform.getTx());
 		bounds.setY(totalTransform.getTy());
@@ -112,9 +135,7 @@ public class MindMapNodePart extends AbstractContentPart<MindMapNodeVisual>
 	@Override
 	public void setVisualSize(Dimension totalSize) {
 		IResizableContentPart.super.setVisualSize(totalSize);
-// perform layout pass to apply size
-		if(getVisual().getParent()!=null)
-			getVisual().getParent().layout();
+		// perform layout pass to apply size
+		getVisual().getParent().layout();
 	}
-	
 }

@@ -1,3 +1,25 @@
+/**
+ * GEF 5.0.0 Mindmap Tutorial
+ *
+ *  Copyright 2017 by itemis AG
+ *
+ * This file is part of some open source application.
+ *
+ * Some open source application is free software: you can redistribute
+ * it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * Some open source application is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
+ */
 package com.itemis.gef.tutorial.mindmap.ui.editor;
 
 import java.io.ByteArrayInputStream;
@@ -25,14 +47,12 @@ import com.itemis.gef.tutorial.mindmap.SimpleMindMapModule;
 import com.itemis.gef.tutorial.mindmap.model.AbstractMindMapItem;
 import com.itemis.gef.tutorial.mindmap.model.MindMapNode;
 import com.itemis.gef.tutorial.mindmap.model.SimpleMindMap;
-import com.itemis.gef.tutorial.mindmap.model.SimpleMindMapExampleFactory;
 import com.itemis.gef.tutorial.mindmap.models.ItemCreationModel;
 import com.itemis.gef.tutorial.mindmap.models.ItemCreationModel.Type;
 import com.itemis.gef.tutorial.mindmap.visuals.MindMapNodeVisual;
 
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
@@ -52,14 +72,14 @@ public class SimpleMindMapEditor extends AbstractFXEditor {
 
 	@Override
 	public void doSave(IProgressMonitor monitor) {
-		// получаем содержимое средства просмотра
+		// retrieve the viewer's content
 		SimpleMindMap mindmap = (SimpleMindMap) getContentViewer().getContents().get(0);
-		try { // сериализовать карту разума
+		try { // serialize mindmap
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream(out);
 			oos.writeObject(mindmap);
 			oos.close();
-			// запись в файл
+			// write to file
 			IFile file = ((IFileEditorInput) getEditorInput()).getFile();
 			file.setContents(new ByteArrayInputStream(out.toByteArray()), true, false, monitor);
 			markNonDirty();
@@ -68,6 +88,7 @@ public class SimpleMindMapEditor extends AbstractFXEditor {
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
+
 	}
 
 	@Override
@@ -82,32 +103,28 @@ public class SimpleMindMapEditor extends AbstractFXEditor {
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		super.init(site, input);
-		SimpleMindMapExampleFactory fac = new SimpleMindMapExampleFactory();
 
-        SimpleMindMap mindmap = fac.createComplexExample();
-		//SimpleMindMap mindmap = null; // прочитать данный входной файл
-//		try {
-//			IFile file = ((IFileEditorInput) input).getFile();
-//			ObjectInputStream is = new ObjectInputStream(file.getContents());
-//			mindmap = (SimpleMindMap) is.readObject();
-//			is.close();
-//			setPartName(file.getName());
-//
-//			// сброс цвета по умолчанию, так как мы не сохранили цвет
-//			for (AbstractMindMapItem item : mindmap.getChildElements()) {
-//				if (item instanceof MindMapNode) {
-//					((MindMapNode) item).setColor(Color.GREENYELLOW);
-//				}
-//			}
-//
-//		} catch (EOFException e) {
-//			// создать новую карту SimpleMindMap...
-//			mindmap = new SimpleMindMap();
-//		} catch (Exception e) {
-//			throw new PartInitException("Could not load input", e);
-//		}
+		SimpleMindMap mindmap = null; // read the given input file
+		try {
+			IFile file = ((IFileEditorInput) input).getFile();
+			ObjectInputStream is = new ObjectInputStream(file.getContents());
+			mindmap = (SimpleMindMap) is.readObject();
+			is.close();
+			setPartName(file.getName());
+
+			// reset default color, because we didn't save the color
+			for (AbstractMindMapItem item : mindmap.getChildElements()) {
+				if (item instanceof MindMapNode) {
+					((MindMapNode) item).setColor(Color.GREENYELLOW);
+				}
+			}
+		} catch (EOFException e) {
+			// create new SimpleMindMap...
+			mindmap = new SimpleMindMap();
+		} catch (Exception e) {
+			throw new PartInitException("Could not load input", e);
+		}
 		getContentViewer().getContents().setAll(Collections.singletonList(mindmap));
-		
 	}
 
 	/**
@@ -117,7 +134,7 @@ public class SimpleMindMapEditor extends AbstractFXEditor {
 	protected void hookViewers() {
 		final IViewer contentViewer = getContentViewer();
 
-		// создание родительской панели для холста и палитры
+		// creating parent pane for viewer canvas and palette
 		HBox pane = new HBox();
 
 		pane.getChildren().add(contentViewer.getCanvas());
@@ -134,36 +151,50 @@ public class SimpleMindMapEditor extends AbstractFXEditor {
 		MindMapNodeVisual graphic = new MindMapNodeVisual();
 		graphic.setTitle("New Node");
 
-		// ToggleGroup гарантирует, что мы выбираем только одну
+		// the toggleGroup makes sure, we only select one
 		ToggleGroup toggleGroup = new ToggleGroup();
 
 		ToggleButton createNode = new ToggleButton("", graphic);
-    	createNode.setToggleGroup(toggleGroup);
-    	createNode.setMaxWidth(Double.MAX_VALUE);
-    	createNode.selectedProperty().addListener((e, oldVal, newVal) -> {
-    		creationModel.setType(newVal ? Type.Node : Type.None);
-    	});
+		createNode.setToggleGroup(toggleGroup);
+		createNode.setMaxWidth(Double.MAX_VALUE);
+		createNode.selectedProperty().addListener((e, oldVal, newVal) -> {
+			Type type = Type.None;
+			if (newVal) {
+				type = Type.Node;
+			}
+			creationModel.setType(type);
+		});
 
-    	ToggleButton createConn = new ToggleButton("New Connection");
-    	createConn.setToggleGroup(toggleGroup);
-    	createConn.setMaxWidth(Double.MAX_VALUE);
-    	createConn.setMinHeight(50);
-    	createConn.selectedProperty().addListener((e, oldVal, newVal) -> {
-                    creationModel.setType(newVal ? Type.Connection : Type.None);
-    	});
+		ToggleButton createConn = new ToggleButton("New Connection");
+		createConn.setToggleGroup(toggleGroup);
+		createConn.setMaxWidth(Double.MAX_VALUE);
+		createConn.setMinHeight(50);
+		createConn.selectedProperty().addListener((e, oldVal, newVal) -> {
+			Type type = Type.None;
+			if (newVal) {
+				type = Type.Connection;
+			}
+			creationModel.setType(type);
+		});
 
-		// теперь слушаем изменения в модели и деактивируем кнопки, если
-		// нужно
-		 // теперь прослушиваем изменения в модели и отключаем кнопки, если это  необходимо 
-        creationModel.getTypeProperty().addListener((e, oldVal, newVal) -> {
-            if (Type.None == newVal) {
-                // unselect the toggle button
-                Toggle selectedToggle = toggleGroup.getSelectedToggle();
-                if (selectedToggle != null) {
-                    selectedToggle.setSelected(false);
-                }
-            }
-        });  
+		// now listen to changes in the model, and deactivate buttons, if
+		// necessary
+		creationModel.getTypeProperty().addListener((e, oldVal, newVal) -> {
+			if (oldVal == newVal) {
+				return;
+			}
+			switch (newVal) {
+			case Node:
+			case Connection:
+				break;
+			case None:
+			default:
+				// unselect the button
+				toggleGroup.getSelectedToggle().setSelected(false);
+				break;
+
+			}
+		});
 
 		return new VBox(20, createNode, createConn);
 	}

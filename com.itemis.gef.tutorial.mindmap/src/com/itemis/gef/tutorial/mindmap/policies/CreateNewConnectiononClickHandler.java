@@ -1,20 +1,39 @@
+/**
+ * GEF 5.0.0 Mindmap Tutorial
+ *
+ *  Copyright 2017 by itemis AG
+ *
+ * This file is part of some open source application.
+ *
+ * Some open source application is free software: you can redistribute
+ * it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * Some open source application is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
+ */
 package com.itemis.gef.tutorial.mindmap.policies;
-
-import org.eclipse.gef.mvc.fx.parts.IContentPart;
-import org.eclipse.gef.mvc.fx.parts.IRootPart;
-import org.eclipse.gef.mvc.fx.parts.IVisualPart;
 
 import java.util.Collections;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.gef.mvc.fx.handlers.AbstractHandler;
-import org.eclipse.gef.mvc.fx.policies.CreationPolicy;
 import org.eclipse.gef.mvc.fx.handlers.IOnClickHandler;
 import org.eclipse.gef.mvc.fx.operations.ChangeSelectionOperation;
+import org.eclipse.gef.mvc.fx.parts.IContentPart;
+import org.eclipse.gef.mvc.fx.parts.IVisualPart;
+import org.eclipse.gef.mvc.fx.policies.CreationPolicy;
 import org.eclipse.gef.mvc.fx.viewer.IViewer;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.reflect.TypeToken;
 import com.itemis.gef.tutorial.mindmap.model.MindMapConnection;
 import com.itemis.gef.tutorial.mindmap.models.ItemCreationModel;
 import com.itemis.gef.tutorial.mindmap.models.ItemCreationModel.Type;
@@ -25,14 +44,13 @@ import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
 
 /**
- * Обработчик для создания нового узла с использованием {@link ItemCreationModel
- * 
+ * The policy to create a new node using the {@link ItemCreationModel}
+ *
  * @author hniederhausen
  *
  */
-public class CreateNewConnectiononClickHandler extends AbstractHandler implements IOnClickHandler {
+public class CreateNewConnectionOnClickHandler extends AbstractHandler implements IOnClickHandler {
 
-	@SuppressWarnings("serial")
 	@Override
 	public void click(MouseEvent e) {
 		if (!e.isPrimaryButtonDown()) {
@@ -42,20 +60,20 @@ public class CreateNewConnectiononClickHandler extends AbstractHandler implement
 		IViewer viewer = getHost().getRoot().getViewer();
 		ItemCreationModel creationModel = viewer.getAdapter(ItemCreationModel.class);
 		if (creationModel.getType() != Type.Connection) {
-			return; // не нужно создавать соединение
+			return; // don't want to create a connection
 		}
 
 		if (creationModel.getSource() == null) {
-			// хост является источником
+			// the host is the source
 			creationModel.setSource((MindMapNodePart) getHost());
-			return; // ждем следующего клика
+			return; // wait for the next click
 		}
 
-		// хорошо, у нас есть пара
+		// okay, we have a pair
 		MindMapNodePart source = creationModel.getSource();
 		MindMapNodePart target = (MindMapNodePart) getHost();
 
-		// проверяем правильность
+		// check if valid
 		if (source == target) {
 			return;
 		}
@@ -65,21 +83,14 @@ public class CreateNewConnectiononClickHandler extends AbstractHandler implement
 			MindMapConnection newConn = new MindMapConnection();
 			newConn.connect(source.getContent(), target.getContent());
 
-			// GEF предоставляет CreatePolicy и операции для добавления
-			// нового элемента в модель
-			IRootPart<? extends Node> root = getHost().getRoot();
-			// получить политику, связанную с IRootPart
-			CreationPolicy creationPolicy = root.getAdapter(new TypeToken<CreationPolicy>() {
-			});
-			// инициализируем политику
+			// use CreatePolicy to add a new connection to the model
+			CreationPolicy creationPolicy = getHost().getRoot().getAdapter(CreationPolicy.class);
 			init(creationPolicy);
-			// создаем IContentPart для нашей новой модели. Мы не используем
-			// возвращенная часть контента
-			creationPolicy.create(newConn, (SimpleMindMapPart) part,
-					HashMultimap.<IContentPart<? extends Node>, String>create());
-			// выполнить фиксацию
+			creationPolicy.create(newConn, part, HashMultimap.<IContentPart<? extends Node>, String>create());
 			commit(creationPolicy);
-			// выбор целевого узла 
+
+			// select target node
+			// FIXME
 			try {
 				viewer.getDomain().execute(new ChangeSelectionOperation(viewer, Collections.singletonList(target)),
 						null);
@@ -87,9 +98,8 @@ public class CreateNewConnectiononClickHandler extends AbstractHandler implement
 			}
 		}
 
-		// окончательно сбрасываем createModel 
+		// reset creation state
 		creationModel.setSource(null);
 		creationModel.setType(Type.None);
 	}
-
 }
